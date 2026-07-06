@@ -2,10 +2,11 @@
   "name": "claude",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.ts",
   "scripts": {
-    "start": "node --env-file=.env server.js",
-    "dev": "nodemon --exec \"node --env-file=.env\" server.js",
+    "start": "tsx --env-file=.env server.ts",
+    "dev": "tsx watch --env-file=.env server.ts",
+    "typecheck": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,5 +15,10 @@
   "type": "module",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   }
 }
