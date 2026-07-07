@@ -1,42 +1,63 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
-import { apiKey } from "./constants.js";
+import type {MessageParam} from "@anthropic-ai/sdk/resources/messages";
+import {apiKey} from "./constants.js";
+import readline from "node:readline/promises";
+import {stdin as input, stdout as output} from "node:process";
 
-const client = new Anthropic({ apiKey });
+const client = new Anthropic({apiKey});
 
 const messages: MessageParam[] = [];
+const tokens: number[] = []
 
 const addUserMessage = (messages: MessageParam[], content: string): void => {
-    messages.push({ role: "user", content });
+    messages.push({role: "user", content});
 };
 
 const addAssistantMessage = (messages: MessageParam[], content: string): void => {
-    messages.push({ role: "assistant", content });
+    messages.push({role: "assistant", content});
 };
+
+const tokensUsed = (token: number) => tokens.push(token);
+
 
 const chat = async (messages: MessageParam[]): Promise<string | undefined> => {
     const response = await client.messages.create({
-        model: "claude-sonnet-5",
+        model: "claude-haiku-4-5",
         max_tokens: 1024,
         messages: messages,
     });
 
-    // console.log(response)
+    tokensUsed(response.usage.input_tokens + response.usage.output_tokens);
 
     for (const block of response.content) {
         if (block.type === "text") {
-            // console.log(`Anthropic: ${block.text}`);
             return block.text;
         }
     }
 };
 
-addUserMessage(messages, "Define quantum computing in one sentence");
-let answer = await chat(messages);
-addAssistantMessage(messages, answer ?? "No answer received.");
-addUserMessage(messages,"Write another sentence");
-answer = await chat(messages);
-addAssistantMessage(messages, answer ?? "No answer received.");
+async function main() {
+    const rl = readline.createInterface({
+        input,
+        output,
+    });
 
+    while (true) {
+        const userQuestion = await rl.question(messages.length === 0 ? "🦐 Supp, How can I help?: \n" : "🦐 What else can I help you with?: \n");
 
-console.log(messages);
+        if (userQuestion.trim().toLowerCase() === "close chat") break;
+
+        addUserMessage(messages, userQuestion);
+        const answer = await chat(messages);
+        addAssistantMessage(messages, `${answer} \n`);
+
+        console.log(`🐴 Answer: ${answer} \n`);
+    }
+
+    console.log(`Total tokens used: ${tokens.reduce((a, b) => a + b, 0)}`);
+
+    rl.close();
+
+}
+
+main().catch(console.error);
