@@ -18,7 +18,6 @@ A minimal Node.js + TypeScript sandbox for experimenting with the Anthropic (Cla
 Requires a `.env` file at the repo root. API keys are read from `process.env` and re-exported through `constants.ts`:
 
 - `CLAUDE_API_KEY` → `apiKey` (used by the Anthropic client)
-- `CHATGPT_API_KEY` → `gptKey` (declared but currently unused)
 
 ## Notes
 
