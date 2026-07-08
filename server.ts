@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type {MessageParam} from "@anthropic-ai/sdk/resources/messages";
+import type {MessageCreateParamsNonStreaming, MessageParam} from "@anthropic-ai/sdk/resources/messages";
 import {apiKey} from "./constants.js";
 import readline from "node:readline/promises";
 import {stdin as input, stdout as output} from "node:process";
@@ -20,12 +20,16 @@ const addAssistantMessage = (messages: MessageParam[], content: string): void =>
 const tokensUsed = (token: number) => tokens.push(token);
 
 
-const chat = async (messages: MessageParam[]): Promise<string | undefined> => {
-    const response = await client.messages.create({
-        model: "claude-haiku-4-5",
+const chat = async (messages: MessageParam[],  temperature: number, system?: string | null ): Promise<string | undefined> => {
+    const params: MessageCreateParamsNonStreaming = {
+        model: "claude-sonnet-4-6",
         max_tokens: 1024,
-        messages: messages,
-    });
+        messages,
+        temperature,
+        ...(system ? {system} : {}),
+    };
+
+    const response = await client.messages.create(params);
 
     tokensUsed(response.usage.input_tokens + response.usage.output_tokens);
 
@@ -37,18 +41,17 @@ const chat = async (messages: MessageParam[]): Promise<string | undefined> => {
 };
 
 async function main() {
-    const rl = readline.createInterface({
-        input,
-        output,
-    });
+    const rl = readline.createInterface({input, output,});
 
     while (true) {
         const userQuestion = await rl.question(messages.length === 0 ? "🦐 Supp, How can I help?: \n" : "🦐 What else can I help you with?: \n");
 
-        if (userQuestion.trim().toLowerCase() === "close chat") break;
+        if (userQuestion.trim().toLowerCase() === "close") break;
+
+        // const system = 'You are a JavaScript Senior Software Developer who writes very concise code';
 
         addUserMessage(messages, userQuestion);
-        const answer = await chat(messages);
+        const answer = await chat(messages,1.0);
         addAssistantMessage(messages, `${answer} \n`);
 
         console.log(`🐴 Answer: ${answer} \n`);
